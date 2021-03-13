@@ -3,7 +3,7 @@
 namespace :sqldef do
   desc 'Export the database'
   task export: [:environment] do
-    puts 'hello'
+    Sqldef.download(:psqldef)
   end
 
   desc 'Apply the database'
