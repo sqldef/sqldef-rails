@@ -31,9 +31,39 @@ module Sqldef
     attr_accessor :bin
 
     # @param [String,Symbol] command - mysqldef, psqldef, sqllite3def
+    # @param [String] path - Export destination
+    def export(command:, path:, host:, port: nil, user:, password: nil, database:)
+      sqldef = download(command)
+      schema = IO.popen(
+        [
+          sqldef,
+          "--user=#{user}", *(["--password=#{password}"] if password),
+          "--host=#{host}", *(["--port=#{port}"] if port),
+          '--export', database,
+        ],
+        &:read
+      )
+      File.write(path, schema)
+    end
+
+    # @param [String,Symbol] command - mysqldef, psqldef, sqllite3def
+    # @param [String] path - Schema file path
+    def dry_run(command:, path:, host:, port: nil, user:, password: nil, database:)
+      sqldef = download(command)
+      system(
+        sqldef,
+        "--user=#{user}", *(["--password=#{password}"] if password),
+        "--host=#{host}", *(["--port=#{port}"] if port),
+        '--dry-run', database,
+        in: path,
+      )
+    end
+
+    # @param [String,Symbol] command - mysqldef, psqldef, sqllite3def
+    # @return String - command path
     def download(command)
       path = File.join(bin, command = command.to_s)
-      return if File.executable?(path)
+      return path if File.executable?(path)
 
       print("Downloading '#{command}' under '#{bin}'... ")
       resp = get(build_url(command), code: 302) # Latest
@@ -50,6 +80,7 @@ module Sqldef
 
       FileUtils.chmod('+x', path)
       puts 'done.'
+      path
     end
 
     private

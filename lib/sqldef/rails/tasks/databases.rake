@@ -9,9 +9,10 @@ end
 
 namespace :db do
   {
-    'migrate'     => 'sqldef:apply',
-    'schema:load' => 'sqldef:apply',
-    'schema:dump' => 'sqldef:export',
+    'migrate:status' => 'sqldef:dry-run',
+    'migrate'        => 'sqldef:apply',
+    'schema:load'    => 'sqldef:apply',
+    'schema:dump'    => 'sqldef:export',
   }.each do |db, sqldef|
     desc Rake::Task[sqldef].comment
     task db => sqldef
