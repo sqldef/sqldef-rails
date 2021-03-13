@@ -31,7 +31,7 @@ module Sqldef
     attr_accessor :bin
 
     # @param [String,Symbol] command - mysqldef, psqldef, sqllite3def
-    # @param [String] path - Export destination
+    # @param [String] path - Schema export path
     def export(command:, path:, host:, port: nil, user:, password: nil, database:)
       sqldef = download(command)
       schema = IO.popen(
@@ -43,6 +43,7 @@ module Sqldef
         ],
         &:read
       )
+      raise "Failed to execute '#{sqldef}'" unless $?.success?
       File.write(path, schema)
     end
 
@@ -50,11 +51,24 @@ module Sqldef
     # @param [String] path - Schema file path
     def dry_run(command:, path:, host:, port: nil, user:, password: nil, database:)
       sqldef = download(command)
-      system(
+      execute(
         sqldef,
         "--user=#{user}", *(["--password=#{password}"] if password),
         "--host=#{host}", *(["--port=#{port}"] if port),
         '--dry-run', database,
+        in: path,
+      )
+    end
+
+    # @param [String,Symbol] command - mysqldef, psqldef, sqllite3def
+    # @param [String] path - Schema file path
+    def apply(command:, path:, host:, port: nil, user:, password: nil, database:)
+      sqldef = download(command)
+      execute(
+        sqldef,
+        "--user=#{user}", *(["--password=#{password}"] if password),
+        "--host=#{host}", *(["--port=#{port}"] if port),
+        database,
         in: path,
       )
     end
@@ -84,6 +98,12 @@ module Sqldef
     end
 
     private
+
+    def execute(*cmd, **opts)
+      unless system(*cmd, **opts)
+        raise "Failed to execute '#{cmd.first}'"
+      end
+    end
 
     def build_url(command)
       unless COMMANDS.include?(command)

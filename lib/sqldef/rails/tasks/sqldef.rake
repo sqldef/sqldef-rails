@@ -37,6 +37,15 @@ namespace :sqldef do
 
   desc 'Apply the database'
   task apply: [:environment] do
-    puts 'hello'
+    database = Rails.application.config_for(:database)
+    Sqldef.apply(
+      host:     database.fetch(:host),
+      port:     database[:port],
+      user:     database.fetch(:username),
+      password: database[:password],
+      database: database.fetch(:database),
+      command:  commands.fetch(database.fetch(:adapter)),
+      path:     Rails.root.join('db/schema.sql').to_s,
+    )
   end
 end
