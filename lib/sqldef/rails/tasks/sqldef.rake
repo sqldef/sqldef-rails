@@ -9,7 +9,7 @@ namespace :sqldef do
 
   desc 'Export the database'
   task export: [:environment] do
-    database = Rails.application.config_for(:database)
+    database = Sqldef::Rails.database_config
     Sqldef.export(
       host:     database.fetch(:host),
       port:     database[:port],
@@ -23,7 +23,7 @@ namespace :sqldef do
 
   desc 'Dry-run the database'
   task 'dry-run': [:environment] do
-    database = Rails.application.config_for(:database)
+    database = Sqldef::Rails.database_config
     Sqldef.dry_run(
       host:     database.fetch(:host),
       port:     database[:port],
@@ -37,7 +37,7 @@ namespace :sqldef do
 
   desc 'Apply the database'
   task apply: [:environment] do
-    database = Rails.application.config_for(:database)
+    database = Sqldef::Rails.database_config
     Sqldef.apply(
       host:     database.fetch(:host),
       port:     database[:port],
